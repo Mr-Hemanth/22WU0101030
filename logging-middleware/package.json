@@ -1,0 +1,10 @@
+{
+  "name": "affordmed-logging-middleware",
+  "version": "1.0.0",
+  "description": "Custom logging middleware for AffordMed assignment",
+  "main": "logging.js",
+  "type": "module",
+  "dependencies": {
+    "node-fetch": "^3.3.0"
+  }
+}
