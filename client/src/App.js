@@ -1,64 +1,146 @@
-// src/App.js
-import React, { useState, useEffect } from 'react';
-import { AppBar, Toolbar, Typography, Container, Paper, Tabs, Tab, Box } from '@mui/material';
-import URLShortenerForm from './pages/URLShortenerForm';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { 
+  Container, 
+  AppBar, 
+  Toolbar, 
+  Typography, 
+  Button, 
+  Box,
+  useMediaQuery,
+  IconButton,
+  Menu,
+  MenuItem
+} from '@mui/material';
+import { Menu as MenuIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+
+import { initializeLogging, Log } from './utils/logger';
+import UrlShortenerPage from './pages/UrlShortenerPage';
 import StatisticsPage from './pages/StatisticsPage';
-import TabPanel from './components/TabPanel';
-import Logger from './components/Logger';
+import RedirectHandler from './components/RedirectHandler';
 
-const ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJNYXBDbGFpbXMiOnsiYXVkIjoiaHR0cDovLzIwLjI0NC41Ni4xNDQvZXZhbHVhdGlvbi1zZXJ2aWNlIiwiZW1haWwiOiJoZW1hbnRocmVkZHkuZHdhcmFtcHVkaV8yMDI2QHdveHNlbi5lZHUuaW4iLCJleHAiOjE3NTQ4OTgyMDIsImlhdCI6MTc1NDg5NzMwMiwiaXNzIjoiQWZmb3JkIE1lZGljYWwgVGVjaG5vbG9naWVzIFByaXZhdGUgTGltaXRlZCIsImp0aSI6IjYzMWM4Y2VkLTM0N2EtNDdjMy1iNjNhLTkxY2U3ODcyNTRkNyIsImxvY2FsZSI6ImVuLUlOIiwibmFtZSI6ImhlbWFudGggZHdhcmFtcHVkaSIsInN1YiI6IjM5ZGNlZjlkLTE4MDMtNDZlZC1iZDgyLTI2NGQwOGM0NTA1YSJ9LCJlbWFpbCI6ImhlbWFudGhyZWRkeS5kd2FyYW1wdWRpXzIwMjZAd294c2VuLmVkdS5pbiIsIm5hbWUiOiJoZW1hbnRoIGR3YXJhbXB1ZGkiLCJyb2xsTm8iOiIyMnd1MDEwMTAzMCIsImFjY2Vzc0NvZGUiOiJVTVhWUVQiLCJjbGllbnRJRCI6IjM5ZGNlZjlkLTE4MDMtNDZlZC1iZDgyLTI2NGQwOGM0NTA1YSIsImNsaWVudFNlY3JldCI6InNTRUJqWHp0WVJDQ1F6UGgifQ.gv2-9vV4EIHQ7VSFnAqQxOjiDvF9LIab-eVMU06_ihY';
-const logger = new Logger(ACCESS_TOKEN);
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+});
 
-function App() {
-  const [currentTab, setCurrentTab] = useState(0);
-  const [refreshStats, setRefreshStats] = useState(0);
-
-  useEffect(() => {
-    logger.info('frontend', 'component', 'App initialized');
-  }, []);
-
-  const handleTabChange = (e, newValue) => {
-    setCurrentTab(newValue);
+function Navigation() {
+  const navigate = useNavigate();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [anchorEl, setAnchorEl] = useState(null);
+  
+  const handleNavigation = async (path, pageName) => {
+    await Log("frontend", "info", "component", `Navigating to ${pageName}`);
+    navigate(path);
+    setAnchorEl(null);
   };
 
-  const handleUrlCreated = () => {
-    setRefreshStats(prev => prev + 1);
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
   };
 
   return (
-    <div>
-      <AppBar position="static" sx={{ bgcolor: '#1976d2' }}>
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
-            🏥 AffordMed URL Shortener
-          </Typography>
-          <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-            Technology, Innovation & Affordability
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    <AppBar position="static">
+      <Toolbar>
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          URL Shortener
+        </Typography>
+        
+        {isMobile ? (
+          <>
+            <IconButton color="inherit" onClick={handleMenuOpen}>
+              <MenuIcon />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={() => handleNavigation('/', 'home')}>
+                Create URLs
+              </MenuItem>
+              <MenuItem onClick={() => handleNavigation('/statistics', 'statistics')}>
+                Statistics
+              </MenuItem>
+            </Menu>
+          </>
+        ) : (
+          <>
+            <Button 
+              color="inherit" 
+              onClick={() => handleNavigation('/', 'home')}
+            >
+              CREATE URLS
+            </Button>
+            <Button 
+              color="inherit" 
+              onClick={() => handleNavigation('/statistics', 'statistics')}
+            >
+              STATISTICS
+            </Button>
+          </>
+        )}
+      </Toolbar>
+    </AppBar>
+  );
+}
 
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Paper elevation={2} sx={{ borderRadius: 2 }}>
-          <Tabs value={currentTab} onChange={handleTabChange} centered>
-            <Tab label="🔗 URL Shortener" />
-            <Tab label="📊 Statistics" />
-          </Tabs>
+function App() {
+  const [loggingReady, setLoggingReady] = useState(false);
 
-          <TabPanel value={currentTab} index={0}>
-            <URLShortenerForm onUrlCreated={handleUrlCreated} />
-          </TabPanel>
-          <TabPanel value={currentTab} index={1} key={refreshStats}>
-            <StatisticsPage />
-          </TabPanel>
-        </Paper>
-        <Box sx={{ mt: 4, textAlign: 'center' }}>
-          <Typography variant="body2" color="text.secondary">
-            AffordMed Campus Hiring Evaluation - Full Stack URL Shortener
-          </Typography>
-        </Box>
-      </Container>
-    </div>
+  useEffect(() => {
+    async function setupLogging() {
+      const success = await initializeLogging();
+      setLoggingReady(success);
+      
+      if (success) {
+        await Log("frontend", "info", "component", "App initialized successfully");
+      }
+    }
+    
+    setupLogging();
+  }, []);
+
+  if (!loggingReady) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Container>
+          <Box sx={{ mt: 4, textAlign: 'center' }}>
+            <Typography>Initializing application...</Typography>
+          </Box>
+        </Container>
+      </ThemeProvider>
+    );
+  }
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Navigation />
+        <Container maxWidth="lg">
+          <Routes>
+            <Route path="/" element={<UrlShortenerPage />} />
+            <Route path="/statistics" element={<StatisticsPage />} />
+            <Route path="/:shortcode" element={<RedirectHandler />} />
+          </Routes>
+        </Container>
+      </Router>
+    </ThemeProvider>
   );
 }
 
